@@ -24,7 +24,7 @@ const DashboardLayout = () => {
   };
 
   return (
-    <Layout className="h-full">
+    <Layout className="h-screen overflow-hidden">
       {/* 顶栏 */}
       <Header className="flex items-center justify-between bg-gray-100 p-4">
         <Logo />
@@ -33,7 +33,7 @@ const DashboardLayout = () => {
         </Avatar>
       </Header>
 
-      <Layout>
+      <Layout className="min-h-0 flex-1 overflow-hidden">
         {/* 侧栏 */}
         <Sider width={220} breakpoint="lg">
           <Menu
@@ -51,14 +51,14 @@ const DashboardLayout = () => {
 
         {/* 内容区 */}
         <Layout>
-          <Breadcrumb className="px-4">
+          <Breadcrumb className="p-4 pb-0">
             <Breadcrumb.Item key="home">
               <Link to="/">Home</Link>
             </Breadcrumb.Item>
             <Breadcrumb.Item key={selectedKey}>{selectedKey}</Breadcrumb.Item>
           </Breadcrumb>
 
-          <Content>
+          <Content className="overflow-hidden p-4">
             <Outlet />
           </Content>
         </Layout>

@@ -27,7 +27,7 @@ export interface ProductFormModalProps {
     name: string;
     price: number;
     stock: number;
-    status?: Status; // ✅ 用字面量联合
+    status?: Status;
   }) => Promise<void> | void;
 }
 
@@ -39,7 +39,7 @@ export default function ProductFormModal({
   onCancel,
   onSubmit,
 }: ProductFormModalProps) {
-  const [form] = Form.useForm(); // ✅ 受控实例
+  const [form] = Form.useForm();
 
   // 打开/切换记录时：reset → set
   useEffect(() => {
@@ -75,20 +75,19 @@ export default function ProductFormModal({
 
   return (
     <Modal
-      visible={open} // ✅ 用 visible
+      visible={open}
       title={mode === "create" ? "新增商品" : "编辑商品"}
       onOk={handleOk}
       onCancel={onCancel}
       confirmLoading={confirmLoading}
-      unmountOnExit // 关闭卸载，避免脏状态
-      // 可选：强制按记录重建 Modal
-      // key={mode === 'edit' ? initial?.id : 'create'}
+      unmountOnExit
     >
-      <Form form={form}>
+      <Form form={form} layout="horizontal">
         <Form.Item
           label="商品名"
           field="name"
           rules={[{ required: true, message: "请输入商品名" }]}
+          className="m-0 flex items-center justify-center"
         >
           <Input placeholder="请输入商品名" />
         </Form.Item>
@@ -97,14 +96,14 @@ export default function ProductFormModal({
           field="price"
           rules={[{ required: true, message: "请输入价格" }]}
         >
-          <InputNumber min={0} style={{ width: "100%" }} />
+          <InputNumber min={0} />
         </Form.Item>
         <Form.Item
           label="库存"
           field="stock"
           rules={[{ required: true, message: "请输入库存" }]}
         >
-          <InputNumber min={0} style={{ width: "100%" }} />
+          <InputNumber min={0} />
         </Form.Item>
         {mode === "edit" && (
           <Form.Item
