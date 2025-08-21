@@ -5,6 +5,8 @@ import { getProducts } from "../api/products";
 import type { ProductsResp } from "../types/productsResp";
 import type { TableProps } from "@arco-design/web-react";
 import type { TableColumnProps } from "@arco-design/web-react";
+import { Tooltip } from "@arco-design/web-react";
+import dayjs from "../lib/dayjs";
 
 import type { Product } from "../types/product";
 type OnChange = NonNullable<TableProps<Product>["onChange"]>;
@@ -31,7 +33,7 @@ const ProductsPage = () => {
       current: page,
       pageSize: PageSize,
       total: data?.total ?? 0,
-      showTotal: true,
+      showTotal: false,
       sizeCanChange: false,
       pageSizeChangeResetCurrent: false,
     }),
@@ -89,7 +91,23 @@ const ProductsPage = () => {
             : "descend"
           : undefined,
     },
-    { title: "发布时间", dataIndex: "publishedAt" },
+
+    {
+      title: "发布时间",
+      dataIndex: "publishedAt",
+      width: 220,
+      render: (value: string) =>
+        value ? (
+          <Tooltip
+            position="tl"
+            content={dayjs(value).format("YYYY-MM-DD HH:mm:ss")}
+          >
+            <span className="block w-full">{dayjs(value).fromNow()}</span>
+          </Tooltip>
+        ) : (
+          "-"
+        ),
+    },
     { title: "状态", dataIndex: "status" },
   ];
 
@@ -132,16 +150,21 @@ const ProductsPage = () => {
   };
 
   return (
-    <Table
-      rowKey="id"
-      loading={loading}
-      columns={columns}
-      data={data?.items ?? []}
-      pagination={pagination}
-      onChange={handleChange}
-      noDataElement={err ? "加载失败，请稍后再试" : "暂无数据"}
-      scroll={{ y: 560 }}
-    />
+    <div className="h-full">
+      <div>hello</div>
+      <Table
+        rowKey="id"
+        loading={loading}
+        columns={columns}
+        data={data?.items ?? []}
+        pagination={pagination}
+        onChange={handleChange}
+        noDataElement={err ? "加载失败，请稍后再试" : "暂无数据"}
+        renderPagination={(node) => (
+          <div className="flex items-center justify-center">{node}</div>
+        )}
+      />
+    </div>
   );
 };
 
