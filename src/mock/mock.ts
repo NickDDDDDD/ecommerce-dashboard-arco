@@ -45,7 +45,7 @@ Mock.mock(
           const name = (p.name || "").toLowerCase();
           return keywords.every((kw) => name.includes(kw));
         })
-      : list.slice(); // 浅拷贝以便后续 sort 不影响原数组
+      : list.slice();
 
     // --- sort ---
     if (sortBy === "price" || sortBy === "stock") {
@@ -126,5 +126,24 @@ Mock.mock(
     return next;
   },
 );
+
+// DELETE /products/:id
+Mock.mock(/\/api\/products\/([^/]+)$/, "delete", (options: { url: string }) => {
+  const m = options.url.match(/\/api\/products\/([^/]+)$/);
+  const id = m?.[1];
+  if (!id) {
+    // 没匹配到 id，就直接返回空对象（等于 200）
+    return {};
+  }
+  // 注意把两边都转成字符串再比
+  const idx = list.findIndex((p) => String(p.id) === String(id));
+  if (idx === -1) {
+    // 找不到也返回 200，方便前端流程（要模拟 404 可自定义 axios validateStatus）
+    return {};
+  }
+  list.splice(idx, 1);
+  // Mock.js 里不好设置 204，这里返回个空对象即 200
+  return {};
+});
 
 Mock.setup({ timeout: "200-600" });

@@ -25,3 +25,7 @@ export async function updateProduct(
   const { data } = await http.put<Product>(`/products/${id}`, patch);
   return data;
 }
+
+export async function deleteProduct(id: string) {
+  await http.delete(`/products/${id}`);
+}

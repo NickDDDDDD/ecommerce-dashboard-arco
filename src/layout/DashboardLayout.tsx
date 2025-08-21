@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { Layout, Menu, Breadcrumb, Typography } from "@arco-design/web-react";
+import { Layout, Menu, Breadcrumb } from "@arco-design/web-react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router";
 import { Avatar } from "@arco-design/web-react";
 import { IconUser } from "@arco-design/web-react/icon";
+import Logo from "../components/Logo";
 
 const { Header, Sider, Content } = Layout;
-const { Title } = Typography;
 
 const DashboardLayout = () => {
   const { pathname } = useLocation();
@@ -26,8 +26,8 @@ const DashboardLayout = () => {
   return (
     <Layout className="h-full">
       {/* 顶栏 */}
-      <Header className="flex items-center justify-between px-4">
-        <Title heading={4}>LOGO</Title>
+      <Header className="flex items-center justify-between bg-gray-100 p-4">
+        <Logo />
         <Avatar className="bg-blue-600">
           <IconUser />
         </Avatar>
@@ -51,7 +51,7 @@ const DashboardLayout = () => {
 
         {/* 内容区 */}
         <Layout>
-          <Breadcrumb>
+          <Breadcrumb className="px-4">
             <Breadcrumb.Item key="home">
               <Link to="/">Home</Link>
             </Breadcrumb.Item>
