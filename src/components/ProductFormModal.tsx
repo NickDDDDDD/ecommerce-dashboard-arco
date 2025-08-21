@@ -47,8 +47,8 @@ export default function ProductFormModal({
     form.resetFields();
     form.setFieldsValue({
       name: initial?.name ?? "",
-      price: initial?.price ?? 0,
-      stock: initial?.stock ?? 0,
+      price: initial?.price ?? "",
+      stock: initial?.stock ?? "",
       ...(mode === "edit"
         ? { status: (initial?.status as Status) ?? "draft" }
         : {}),
@@ -59,13 +59,13 @@ export default function ProductFormModal({
     const values = await form.validate();
     if (mode === "create") {
       await onSubmit({
-        name: values.name as string,
+        name: values.name.trim() as string,
         price: Number(values.price),
         stock: Number(values.stock),
       });
     } else {
       await onSubmit({
-        name: values.name as string,
+        name: values.name.trim() as string,
         price: Number(values.price),
         stock: Number(values.stock),
         status: values.status as Status,
@@ -86,7 +86,18 @@ export default function ProductFormModal({
         <Form.Item
           label="商品名"
           field="name"
-          rules={[{ required: true, message: "请输入商品名" }]}
+          rules={[
+            { required: true, message: "请输入商品名" },
+            {
+              validator(value, cb) {
+                if (!value || String(value).trim() === "") {
+                  return cb("用户名不能为空或全为空格");
+                }
+
+                return cb();
+              },
+            },
+          ]}
           className="m-0 flex items-center justify-center"
         >
           <Input placeholder="请输入商品名" />
@@ -94,14 +105,43 @@ export default function ProductFormModal({
         <Form.Item
           label="价格"
           field="price"
-          rules={[{ required: true, message: "请输入价格" }]}
+          rules={[
+            { required: true, message: "请输入价格" },
+            {
+              validator(value, cb) {
+                if (value <= 0) {
+                  return cb("价格必须大于 0");
+                }
+                if (!Number.isInteger(value)) {
+                  const str = String(value);
+                  const decimal = str.split(".")[1];
+                  if (decimal && decimal.length > 2) {
+                    return cb("价格最多保留两位小数");
+                  }
+                }
+                return cb();
+              },
+            },
+          ]}
         >
           <InputNumber min={0} />
         </Form.Item>
         <Form.Item
           label="库存"
           field="stock"
-          rules={[{ required: true, message: "请输入库存" }]}
+          rules={[
+            { required: true, message: "请输入库存" },
+            {
+              validator(value, cb) {
+                if (value < 0) {
+                  return cb("库存不能小于 0");
+                } else if (!Number.isInteger(value)) {
+                  return cb("库存必须为整数");
+                }
+                return cb();
+              },
+            },
+          ]}
         >
           <InputNumber min={0} />
         </Form.Item>
