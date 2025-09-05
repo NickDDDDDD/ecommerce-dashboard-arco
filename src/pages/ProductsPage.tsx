@@ -1,13 +1,19 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Button, Message } from "@arco-design/web-react";
 import ProductsSearch from "../components/ProductsSearch";
 import ProductsTable from "../components/ProductsTable";
 import ProductFormModal from "../components/ProductFormModal";
 import { useProductsQuery, type SortField } from "../hooks/useProductsQuery";
-import { useProductsData } from "../hooks/useProductsData";
-import { createProduct, updateProduct, deleteProduct } from "../api/products";
 import type { Product } from "../types/product";
 import type { ProductCreate } from "../types/productCreate";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import {
+  fetchProducts,
+  createProductThunk,
+  updateProductThunk,
+  deleteProductThunk,
+  type FetchParams,
+} from "../store/productsSlice";
 
 const PageSize = 10;
 type Status = Product["status"];
@@ -17,16 +23,19 @@ export default function ProductsPage() {
   const { q, page, sortBy, sortDir, setQuery, setPage, setSort } =
     useProductsQuery();
 
-  // 列表数据
-  const [refresh, setRefresh] = useState(0);
-  const { data, loading, err } = useProductsData({
-    q,
-    page,
-    pageSize: PageSize,
-    sortBy,
-    sortDir,
-    refresh,
-  });
+  const dispatch = useAppDispatch();
+  const { items, total, loading, error } = useAppSelector((s) => s.products);
+
+  useEffect(() => {
+    const params: FetchParams = {
+      q,
+      page,
+      pageSize: PageSize,
+      sortBy,
+      sortDir,
+    };
+    dispatch(fetchProducts(params));
+  }, [q, page, sortBy, sortDir, dispatch]);
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -51,6 +60,14 @@ export default function ProductsPage() {
     stock: number;
     status?: Status;
   }) => {
+    const params: FetchParams = {
+      q,
+      page,
+      pageSize: PageSize,
+      sortBy,
+      sortDir,
+    };
+
     try {
       setModalLoading(true);
       if (modalMode === "create") {
@@ -59,32 +76,48 @@ export default function ProductsPage() {
           price: values.price,
           stock: values.stock,
         };
-        await createProduct(payload);
-        Message.success("新增成功");
+        await dispatch(createProductThunk(payload)).unwrap();
+        Message.success({ content: "新增成功" });
       } else {
         if (!current) return;
-        await updateProduct(current.id, {
-          name: values.name,
-          price: values.price,
-          stock: values.stock,
-          status: values.status,
-        });
-        Message.success("保存成功");
+        await dispatch(
+          updateProductThunk({
+            id: current.id,
+            changes: {
+              name: values.name,
+              price: values.price,
+              stock: values.stock,
+              status: values.status,
+            },
+          }),
+        ).unwrap();
+        Message.success({ content: "更新成功" });
       }
       setModalOpen(false);
-      setRefresh((x) => x + 1); // 重新拉取
+      await dispatch(fetchProducts(params));
+    } catch (err) {
+      Message.error({ content: "更新失败，请稍后重试" });
+      console.error(err);
     } finally {
       setModalLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
+    const params: FetchParams = {
+      q,
+      page,
+      pageSize: PageSize,
+      sortBy,
+      sortDir,
+    };
     try {
-      await deleteProduct(id);
-      Message.success("已删除");
-      setRefresh((x) => x + 1);
-    } catch {
-      Message.error("删除失败，请稍后重试");
+      await dispatch(deleteProductThunk(id)).unwrap();
+      Message.success({ content: "已删除" });
+      await dispatch(fetchProducts(params));
+    } catch (err) {
+      Message.error({ content: "删除失败，请稍后重试" });
+      console.error(err);
     }
   };
 
@@ -92,8 +125,8 @@ export default function ProductsPage() {
   const onSort = (field?: SortField, dir?: "ascend" | "descend") =>
     setSort(field, dir);
 
-  const items = useMemo(() => data?.items ?? [], [data?.items]);
-  const total = data?.total ?? 0;
+  const itemsMemo = useMemo(() => items ?? [], [items]);
+  const totalMemo = total ?? 0;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4">
@@ -106,14 +139,14 @@ export default function ProductsPage() {
 
       <div className="min-h-0 flex-1">
         <ProductsTable
-          data={items}
+          data={itemsMemo}
           loading={loading}
           page={page}
-          total={total}
+          total={totalMemo}
           pageSize={PageSize}
           sortBy={sortBy}
           sortDir={sortDir}
-          err={err}
+          err={error}
           onPage={setPage}
           onSort={onSort}
           onEdit={openEdit}
